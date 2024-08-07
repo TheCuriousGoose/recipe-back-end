@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RecipeRequest;
+use App\Models\Ingredient;
 use Illuminate\Http\Request;
 use App\Models\Recipe;
+use App\Models\Unit;
 
 class RecipeController extends Controller
 {
@@ -32,6 +34,15 @@ class RecipeController extends Controller
     {
         $recipe->load(['ingredients', 'instructions', 'reviews', 'category', 'author:id,name']);
 
+        $recipe->rating = $recipe->rating();
+
+        $units = Unit::select(['id', 'name', 'notation'])->get();
+
+        foreach ($recipe->ingredients as $ingredient => $values) {
+            $recipe->ingredients[$ingredient]->unit = $units->find($values->pivot->unit_id);
+            $recipe->ingredients[$ingredient]->amount = $values->pivot->amount;
+        }
+
         return response()->json([
             'status' => 'success',
             'recipes' => [$recipe]
@@ -56,8 +67,15 @@ class RecipeController extends Controller
             $recipe->instructions()->create($instruction);
         }
 
-        foreach ($request->ingredients as $ingredient) {
-            $recipe->ingredients()->create($ingredient);
+        foreach ($request->ingredients as $ingredientData) {
+            $ingredient = Ingredient::firstOrCreate(
+                ['name' => $ingredientData['name']],
+            );
+
+            $recipe->ingredients()->attach($ingredient->id, [
+                'amount' => $ingredientData['amount'],
+                'unit_id' => $ingredientData['unit_id']
+            ]);
         }
 
         return response()->json([

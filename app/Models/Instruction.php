@@ -16,6 +16,8 @@ class Instruction extends Model
         'title'
     ];
 
+    public $timestamps = false;
+
     public function recipe()
     {
         return $this->belongsTo(Recipe::class);
