@@ -2,26 +2,23 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RecipeRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json($validator->errors(), 422));
+    }
+
     public function authorize()
     {
-        // Here you can add authorization logic, for simplicity, we allow all requests
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
@@ -41,36 +38,6 @@ class RecipeRequest extends FormRequest
             'ingredients.*.name' => 'required|string|max:255',
             'ingredients.*.amount' => 'nullable|string',
             'ingredients.*.unit_id' => 'nullable|exists:units,id',
-        ];
-    }
-
-    /**
-     * Customize the error messages for the defined validation rules.
-     *
-     * @return array
-     */
-    public function messages()
-    {
-        return [
-            'name.required' => 'The recipe name is required.',
-            'category_id.required' => 'The category is required.',
-            'category_id.exists' => 'The selected category is invalid.',
-            'description.required' => 'The description is required.',
-            'preparation_time.required' => 'The preparation time is required.',
-            'preparation_time.integer' => 'The preparation time must be an integer.',
-            'cooking_time.required' => 'The cooking time is required.',
-            'cooking_time.integer' => 'The cooking time must be an integer.',
-            'servings.required' => 'The number of servings is required.',
-            'servings.integer' => 'The number of servings must be an integer.',
-            'instructions.required' => 'The instructions are required.',
-            'instructions.array' => 'The instructions must be an array.',
-            'instructions.*.step.required' => 'Each instruction step is required.',
-            'instructions.*.title.required' => 'Each instruction title is required.',
-            'instructions.*.description.required' => 'Each instruction description is required.',
-            'ingredients.required' => 'The ingredients are required.',
-            'ingredients.array' => 'The ingredients must be an array.',
-            'ingredients.*.name.required' => 'Each ingredient name is required.',
-            'ingredients.*.unit_id.exists' => 'The selected unit is invalid.',
         ];
     }
 }

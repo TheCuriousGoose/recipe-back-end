@@ -26,6 +26,7 @@ class RecipeController extends Controller
 
         return response()->json([
             'status' => 'success',
+            'message' => 'Recipes retrieved successfully',
             'recipes' => $recipes
         ]);
     }
@@ -45,6 +46,7 @@ class RecipeController extends Controller
 
         return response()->json([
             'status' => 'success',
+            'message' => 'Recipe retrieved successfully',
             'recipes' => [$recipe]
         ]);
     }
@@ -81,7 +83,7 @@ class RecipeController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Recipe created successfully',
-            'recipe' => $recipe
+            'recipes' => [$recipe]
         ], 201);
     }
 
@@ -104,13 +106,21 @@ class RecipeController extends Controller
         }
 
         $recipe->ingredients()->delete();
-        foreach ($request->ingredients as $ingredient) {
-            $recipe->ingredients()->create($ingredient);
-        }
+        foreach ($request->ingredients as $ingredientData) {
+            $ingredient = Ingredient::firstOrCreate(
+                ['name' => $ingredientData['name']],
+            );
 
+            $recipe->ingredients()->attach($ingredient->id, [
+                'amount' => $ingredientData['amount'],
+                'unit_id' => $ingredientData['unit_id']
+            ]);
+        }
+        
         return response()->json([
             'status' => 'success',
-            'message' => 'Recipe updated successfully'
+            'message' => 'Recipe updated successfully',
+            'recipes' => [$recipe]
         ]);
     }
 
