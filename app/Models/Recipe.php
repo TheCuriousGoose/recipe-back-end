@@ -63,7 +63,11 @@ class Recipe extends Model
         }
 
         if ($request->has('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->orWhere('description', 'like', '%' . $request->search . '%');
+            $query->orWhereHas('ingredients', function($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search . '%');
+            });
         }
 
         if ($request->has('sort')) {
